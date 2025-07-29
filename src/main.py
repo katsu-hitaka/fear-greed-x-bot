@@ -4,7 +4,7 @@ import time
 from datetime import datetime
 from twitter_client import TwitterClient
 from fear_greed_scraper import FearGreedScraper
-from config import TWEET_TEMPLATE, TWEET_SCHEDULE_HOUR, TWEET_SCHEDULE_MINUTE
+from config import TWEET_TEMPLATE, TWEET_TEMPLATE_EN, TWEET_TEMPLATE_JA, TWEET_SCHEDULE_HOUR, TWEET_SCHEDULE_MINUTE
 
 # Setup logging
 logging.basicConfig(
@@ -17,9 +17,10 @@ logging.basicConfig(
 )
 
 class FearGreedBot:
-    def __init__(self):
+    def __init__(self, language='en'):
         self.twitter_client = TwitterClient()
         self.fear_greed_scraper = FearGreedScraper()
+        self.language = language
         
     def post_fear_greed_update(self):
         """Main function to fetch Fear & Greed data and post to Twitter"""
@@ -37,13 +38,19 @@ class FearGreedBot:
             return False
         
         # Format data for tweet
-        tweet_data = self.fear_greed_scraper.format_tweet_data(fear_greed_data)
+        tweet_data = self.fear_greed_scraper.format_tweet_data(fear_greed_data, self.language)
         if not tweet_data:
             logging.error("Failed to format tweet data")
             return False
         
+        # Select appropriate template based on language
+        if self.language == 'ja':
+            tweet_template = TWEET_TEMPLATE_JA
+        else:
+            tweet_template = TWEET_TEMPLATE_EN
+            
         # Create tweet text
-        tweet_text = TWEET_TEMPLATE.format(**tweet_data)
+        tweet_text = tweet_template.format(**tweet_data)
         
         logging.info(f"Posting tweet: Current Index = {tweet_data['index']}, Status = {tweet_data['status']}")
         
@@ -98,29 +105,44 @@ class FearGreedBot:
 
 def main():
     """Main entry point"""
-    bot = FearGreedBot()
-    
     import sys
-    if len(sys.argv) > 1:
-        command = sys.argv[1].lower()
-        
-        if command == "test":
-            # Test connections
-            bot.test_connection()
-        elif command == "once":
-            # Run once
-            bot.run_once()
-        elif command == "schedule":
-            # Run on schedule
-            bot.run_scheduled()
-        else:
-            print("Usage: python main.py [test|once|schedule]")
-            print("  test     - Test Twitter and Fear & Greed connections")
-            print("  once     - Post Fear & Greed update once")
-            print("  schedule - Run on daily schedule")
+    
+    # Parse arguments
+    language = 'en'  # default
+    command = None
+    
+    for arg in sys.argv[1:]:
+        if arg.lower() == 'ja':
+            language = 'ja'
+        elif arg.lower() in ['test', 'once', 'schedule']:
+            command = arg.lower()
+    
+    bot = FearGreedBot(language=language)
+    
+    if command == "test":
+        # Test connections
+        bot.test_connection()
+    elif command == "once":
+        # Run once
+        bot.run_once()
+    elif command == "schedule":
+        # Run on schedule
+        bot.run_scheduled()
+    elif len(sys.argv) > 1 and not any(arg in ['ja'] for arg in sys.argv[1:]):
+        print("Usage: python main.py [test|once|schedule] [ja]")
+        print("  test     - Test Twitter and Fear & Greed connections")
+        print("  once     - Post Fear & Greed update once")
+        print("  schedule - Run on daily schedule")
+        print("  ja       - Use Japanese language (can be combined with commands)")
+        print("")
+        print("Examples:")
+        print("  python main.py once     - Post once in English")
+        print("  python main.py once ja  - Post once in Japanese")
+        print("  python main.py ja once  - Post once in Japanese")
     else:
         # Default: run once
-        print("Running Fear & Greed update once...")
+        lang_msg = "Japanese" if language == 'ja' else "English"
+        print(f"Running Fear & Greed update once in {lang_msg}...")
         bot.run_once()
 
 if __name__ == "__main__":
