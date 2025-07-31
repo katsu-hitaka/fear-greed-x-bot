@@ -2,7 +2,7 @@ import requests
 import json
 import re
 import logging
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from bs4 import BeautifulSoup
 from config import FEAR_GREED_API_URL, FEAR_GREED_FALLBACK_URL, STATUS_EMOJIS, STATUS_JA
 
@@ -41,8 +41,10 @@ class FearGreedScraper:
                 index_value = int(latest['value'])
                 status = latest['value_classification']
                 
-                # Convert timestamp to readable format
-                timestamp = datetime.fromtimestamp(int(latest['timestamp'])).strftime('%Y-%m-%d %H:%M:%S')
+                # Convert timestamp to readable format (UTC to JST)
+                utc_dt = datetime.fromtimestamp(int(latest['timestamp']), tz=timezone.utc)
+                jst_dt = utc_dt.astimezone(timezone(timedelta(hours=9)))
+                timestamp = jst_dt.strftime('%Y-%m-%d %H:%M:%S')
                 
                 return {
                     'index': index_value,
@@ -80,7 +82,7 @@ class FearGreedScraper:
                     return {
                         'index': index_value,
                         'status': status,
-                        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                        'timestamp': datetime.now(timezone(timedelta(hours=9))).strftime('%Y-%m-%d %H:%M:%S'),
                         'source': 'Web Scraping'
                     }
             
@@ -151,6 +153,7 @@ class FearGreedScraper:
         if language == 'ja':
             description = self.get_status_description_ja(data['status'])
             status_ja = STATUS_JA.get(data['status'], data['status'])
+            current_time = datetime.now(timezone(timedelta(hours=9))).strftime('%Y-%m-%d %H:%M')
             return {
                 'index': data['index'],
                 'status': data['status'],
@@ -158,6 +161,7 @@ class FearGreedScraper:
                 'status_emoji': status_emoji,
                 'timestamp': data['timestamp'],
                 'description': description,
+                'current_time': current_time,
                 'source': data.get('source', 'Unknown')
             }
         else:

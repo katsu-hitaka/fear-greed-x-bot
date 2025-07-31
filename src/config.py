@@ -27,11 +27,13 @@ TWEET_TEMPLATE_JA = """🔥 恐怖貪欲指数 更新 🔥
 
 📊 現在の指数: {index}
 📈 ステータス: {status_ja} ({status_emoji})
-🕐 最終更新: {timestamp}
+🕐 データ更新: {timestamp}
 
 {description}
 
 #恐怖貪欲指数 #ビットコイン #仮想通貨 #投資 #マーケット #FearAndGreed
+
+⏰ 投稿時刻: {current_time}
 """
 
 # Default template (English)

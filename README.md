@@ -1,4 +1,4 @@
-# Fear & Greed Index Twitter Bot
+# Fear & Greed Index X Bot
 
 Fear & Greed Index（恐怖と欲指数）を取得し、X（旧Twitter）に自動投稿するPythonアプリケーションです。英語と日本語の両方に対応しています。
 
@@ -57,6 +57,31 @@ TWITTER_ACCESS_TOKEN_SECRET = "your_access_token_secret_here"
 
 ## 使用方法
 
+### サーバ環境での推奨設定（crontab）
+
+crontabを使用してサーバで定期実行する場合の推奨設定：
+
+```bash
+# crontab -e で編集
+# 日本語版：毎日9:00に投稿
+0 9 * * * cd /path/to/fear-greed-x-bot && /usr/bin/python3 src/main.py once ja >> logs/cron.log 2>&1
+
+# 英語版：毎日18:00に投稿  
+0 18 * * * cd /path/to/fear-greed-x-bot && /usr/bin/python3 src/main.py once en >> logs/cron.log 2>&1
+```
+
+**設定手順：**
+1. `crontab -e` でcrontab編集
+2. 上記設定を追加（パスを実際の環境に合わせて変更）
+3. `mkdir -p logs` でログディレクトリを作成
+4. `chmod +x src/main.py` で実行権限を付与（必要に応じて）
+
+**crontab使用の利点：**
+- システムレベルでの実行保証
+- プロセスクラッシュ時の自動復旧
+- リソース効率（実行時のみプロセス起動）
+- メンテナンスしやすい
+
 ### コマンドライン実行
 
 ```bash
@@ -102,17 +127,19 @@ Investors are optimistic. Markets may be getting overheated.
 #FearAndGreed #Bitcoin #Crypto #TradingView #MarketSentiment
 ```
 
-### 日本語版ツイート（146文字）
+### 日本語版ツイート（157文字）
 ```
 🔥 恐怖貪欲指数 更新 🔥
 
 📊 現在の指数: 73
 📈 ステータス: 貪欲 (🤑)
-🕐 最終更新: 2025-07-29 09:00:00
+🕐 データ更新: 2025-07-29 15:30:00
 
 投資家は楽観的です。市場は過熱気味かもしれません。
 
 #恐怖貪欲指数 #ビットコイン #仮想通貨 #投資 #マーケット #FearAndGreed
+
+⏰ 投稿時刻: 2025-07-30 09:00
 ```
 
 ## 設定のカスタマイズ
@@ -138,19 +165,23 @@ TWEET_TEMPLATE_JA = """🔥 恐怖貪欲指数 更新 🔥
 
 📊 現在の指数: {index}
 📈 ステータス: {status_ja} ({status_emoji})
-🕐 最終更新: {timestamp}
+🕐 データ更新: {timestamp}
 
 {description}
 
 #恐怖貪欲指数 #ビットコイン #仮想通貨 #投資 #マーケット #FearAndGreed
+
+⏰ 投稿時刻: {current_time}
 """
 ```
 
-#### スケジュール設定
+#### スケジュール設定（Python内蔵スケジューラー使用時）
 ```python
 TWEET_SCHEDULE_HOUR = 9    # 投稿時刻（24時間形式）
 TWEET_SCHEDULE_MINUTE = 0  # 投稿分
 ```
+
+**注意**: サーバ環境では上記設定より crontab を推奨します。Python内蔵スケジューラーは開発・テスト用途向けです。
 
 #### ステータス絵文字
 ```python
